@@ -1,12 +1,12 @@
 module Main exposing (..)
 
 import Html
-import LightsGame
+import LightsOut
 
 
 main =
     Html.beginnerProgram
-        { model = LightsGame.init LightsGame.defaultBoard
-        , update = LightsGame.update
-        , view = LightsGame.view
+        { model = LightsOut.init LightsOut.defaultBoard
+        , update = LightsOut.update
+        , view = LightsOut.view
         }

@@ -1,4 +1,4 @@
-module LightsGame exposing (Model, Msg(..), init, update, view, defaultBoard)
+module LightsOut exposing (Model, Msg(..), init, update, view, defaultBoard)
 
 import Html
 import Html.Attributes
