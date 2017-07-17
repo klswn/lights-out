@@ -1,26 +1,45 @@
 module LightsOut exposing (Model, Msg(..), init, update, view, defaultBoard)
 
+import Array
 import Html
 import Html.Attributes
 import Html.Events
+import Matrix exposing (Matrix)
 
 
 type alias Model =
-    { isOn : List Bool }
+    { isOn : Matrix Bool }
 
 
-init : List Bool -> Model
+init : Matrix Bool -> Model
 init startingBoard =
     { isOn = startingBoard }
 
 
-defaultBoard : List Bool
+defaultBoard : Matrix Bool
 defaultBoard =
-    [ False, False, False, False, False, False, False ]
+    Matrix.repeat 6 6 True
+
+
+isSolved : Model -> Bool
+isSolved model =
+    let
+        onLights =
+            Matrix.filter identity model.isOn
+    in
+        Array.isEmpty onLights
+
+
+
+-- Update
+
+
+type alias LightIndex =
+    { x : Int, y : Int }
 
 
 type Msg
-    = Toggle Int
+    = Toggle LightIndex
 
 
 update : Msg -> Model -> Model
@@ -30,20 +49,14 @@ update msg model =
             { model | isOn = toggleLight indexToToggle model.isOn }
 
 
-toggleLight : Int -> List Bool -> List Bool
-toggleLight indexToToggle list =
-    List.indexedMap
-        (\i isOn ->
-            if indexToToggle == i then
-                not isOn
-            else if indexToToggle == i - 1 then
-                not isOn
-            else if indexToToggle == i + 1 then
-                not isOn
-            else
-                isOn
-        )
-        list
+toggleLight : LightIndex -> Matrix Bool -> Matrix Bool
+toggleLight indexToToggle matrix =
+    matrix
+        |> Matrix.update indexToToggle.x indexToToggle.y not
+        |> Matrix.update (indexToToggle.x + 1) indexToToggle.y not
+        |> Matrix.update (indexToToggle.x - 1) indexToToggle.y not
+        |> Matrix.update indexToToggle.x (indexToToggle.y + 1) not
+        |> Matrix.update indexToToggle.x (indexToToggle.y - 1) not
 
 
 
@@ -53,16 +66,51 @@ toggleLight indexToToggle list =
 view : Model -> Html.Html Msg
 view model =
     Html.div []
-        [ model.isOn
-            |> List.indexedMap lightButton
-            |> Html.div []
-        , Html.hr [] []
-        , Html.pre [] [ Html.text <| toString model ]
+        [ if isSolved model then
+            Html.div
+                [ Html.Attributes.style
+                    [ ( "width", "200px" )
+                    , ( "height", "200px" )
+                    , ( "text-align", "center" )
+                    , ( "font-size", "24px" )
+                    , ( "margin", "40px 20px" )
+                    ]
+                ]
+                [ Html.text "Congrats! You won! Reload to play again!" ]
+          else
+            gameView model
+
+        -- , Html.hr [] []
+        -- , Html.p [] [ Html.text <| toString model ]
         ]
 
 
-lightButton : Int -> Bool -> Html.Html Msg
-lightButton buttonIndex isOn =
+gameView : Model -> Html.Html Msg
+gameView model =
+    model.isOn
+        |> Matrix.indexedMap lightButton
+        |> matrixToDivs
+
+
+matrixToDivs : Matrix (Html.Html Msg) -> Html.Html Msg
+matrixToDivs matrix =
+    let
+        makeRow y =
+            Matrix.getRow y matrix
+                |> Maybe.map (Array.toList)
+                |> Maybe.withDefault []
+                |> Html.div []
+
+        height =
+            Matrix.height matrix
+    in
+        List.range 0 height
+            |> List.map makeRow
+            |> Html.div []
+
+
+lightButton : Int -> Int -> Bool -> Html.Html Msg
+lightButton x y isOn =
     Html.div
         [ Html.Attributes.style
             [ ( "background-color"
@@ -73,9 +121,9 @@ lightButton buttonIndex isOn =
               )
             , ( "width", "80px" )
             , ( "height", "80px" )
-            , ( "margin", "2px" )
+            , ( "margin", "0.5px 2px" )
             , ( "display", "inline-block" )
             ]
-        , Html.Events.onClick (Toggle buttonIndex)
+        , Html.Events.onClick (Toggle { x = x, y = y })
         ]
         []
