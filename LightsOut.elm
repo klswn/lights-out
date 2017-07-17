@@ -65,7 +65,10 @@ toggleLight indexToToggle matrix =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.div []
+    Html.div
+        [ Html.Attributes.style
+            [ ( "margin", "10px" ) ]
+        ]
         [ if isSolved model then
             Html.div
                 [ Html.Attributes.style
@@ -115,13 +118,14 @@ lightButton x y isOn =
         [ Html.Attributes.style
             [ ( "background-color"
               , if isOn then
-                    "orange"
+                    "#48d1cc"
                 else
                     "grey"
               )
             , ( "width", "80px" )
             , ( "height", "80px" )
             , ( "margin", "0.5px 2px" )
+            , ( "border-radius", "3px" )
             , ( "display", "inline-block" )
             ]
         , Html.Events.onClick (Toggle { x = x, y = y })
